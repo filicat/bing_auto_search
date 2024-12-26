@@ -58,6 +58,7 @@ def offers_confirm():
         ok_offer = True
     elif is_pm:
         for offer in offers:
+            driver.execute_script("arguments[0].scrollIntoView(true);", offer)
             driver.execute_script("arguments[0].click();", offer)
             time.sleep(1)
         ok_offer = True
@@ -70,6 +71,7 @@ def other_offers_confirm():
         ok_other = True
     else:
         for ot_offer in other_offers:
+            driver.execute_script("arguments[0].scrollIntoView(true);", ot_offer)
             driver.execute_script("arguments[0].click();", ot_offer)
             time.sleep(1)
         ok_other = True
@@ -81,8 +83,7 @@ if __name__ == '__main__':
     # 添加保持登录的数据路径：安装目录一般在C:\Users\Administrator\AppData\Local\Google\Chrome\User Data
     options.add_argument(r"user-data-dir=C:\Users\Administrator\AppData\Local\Google\Chrome\User Data")
     driver = webdriver.Chrome(options=options)
-    driver.get('https://cn.bing.com/')
-    time.sleep(2)  # 可选，等待时间可以根据实际情况调整
+
     search_list = set()
     ok_90: bool = False
     ok_offer: bool = False
@@ -92,6 +93,8 @@ if __name__ == '__main__':
     i = 0
     while True:
         # 切换回主文档
+        driver.get('https://cn.bing.com/')
+        time.sleep(2)  # 可选，等待时间可以根据实际情况调整
         driver.switch_to.default_content()
 
         # 使用自定义条件等待输入框变为可编辑
@@ -114,11 +117,10 @@ if __name__ == '__main__':
         else:
             print("输入框不可用")
 
-        time.sleep(2)
+        time.sleep(10)
         # 等待 <div> 元素变得可点击
         reward_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'b_clickarea')))
         driver.execute_script("arguments[0].click();", reward_btn)
-        time.sleep(3)
 
         # 这里执行完已经切换到内部iframe了, 无需再切换
         wait.until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, STL_REWARD_FRAME)))
@@ -129,7 +131,7 @@ if __name__ == '__main__':
             break
         driver.switch_to.default_content()
         # 等待一段时间后再次搜索
-        time.sleep(10)  # 这里设置为30秒，你可以根据需要调整
+        time.sleep(20)  # 这里设置为30秒，你可以根据需要调整
 
     offers_confirm()
     time.sleep(1)
