@@ -16,8 +16,8 @@ from datetime import datetime
 fake = Faker('zh_CN')
 STL_REWARD_FRAME = "#rewid-f > iframe"
 STL_OFFER_NOT_COMPLETE = "#bingRewards > div > div.flyout_control_threeOffers > div[aria-label='Offer not Completed']"
-STL_OTHER_NOT_COMPLETE = "#bingRewards > div > div.flyout_control_halfUnit > div[aria-label='Offer not Completed']"
-STL_POINT_TITLE = '#bingRewards > div > div > div > a > div.fp_row.align-top.promo_card > div.fc_dyn > div:nth-child(1) > div > p.b_subtitle.promo-title'
+STL_OTHER_NOT_COMPLETE = "#bingRewards > div > div.flyout_control_halfUnit > div[aria-label='Offer not Completed'] > a"
+STL_POINT_TITLE = '#bingRewards > div > div.flyout_control_halfUnit > div.promo_cont > a.block > div:nth-child(2) > div.fc_dyn > div:nth-child(1) > div.fc_dyn > p.b_subtitle.promo-title'
 is_pm = datetime.now().hour >= 12
 
 
@@ -71,6 +71,7 @@ def other_offers_confirm():
         ok_other = True
     else:
         for ot_offer in other_offers:
+            print("ot_offer:"+ot_offer.get_attribute("href"))
             driver.execute_script("arguments[0].scrollIntoView(true);", ot_offer)
             driver.execute_script("arguments[0].click();", ot_offer)
             time.sleep(1)
@@ -100,7 +101,7 @@ if __name__ == '__main__':
         # 使用自定义条件等待输入框变为可编辑
         search_box = wait.until(element_is_editable((By.ID, 'sb_form_q')))
         if search_box:
-            print("输入框可用")
+            # print("输入框可用")
             # 清空搜索框并输入新的搜索词
             search_term = ''
             while True:
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         else:
             print("输入框不可用")
 
-        time.sleep(10)
+        time.sleep(5)
         # 等待 <div> 元素变得可点击
         reward_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'b_clickarea')))
         driver.execute_script("arguments[0].click();", reward_btn)
@@ -125,13 +126,15 @@ if __name__ == '__main__':
         # 这里执行完已经切换到内部iframe了, 无需再切换
         wait.until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, STL_REWARD_FRAME)))
         point_card = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, STL_POINT_TITLE)))
+        print("90PointText:["+point_card.text+"]")
         if point_card.text == "你已获得 90 积分！":
             driver.switch_to.default_content()
             ok_90 = True
+            print("停止90Point获取")
             break
         driver.switch_to.default_content()
         # 等待一段时间后再次搜索
-        time.sleep(20)  # 这里设置为30秒，你可以根据需要调整
+        time.sleep(10)  # 这里设置为30秒，你可以根据需要调整
 
     offers_confirm()
     time.sleep(1)
