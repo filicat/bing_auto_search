@@ -134,7 +134,7 @@ if __name__ == '__main__':
             break
         driver.switch_to.default_content()
         # 等待一段时间后再次搜索
-        time.sleep(10)  # 这里设置为30秒，你可以根据需要调整
+        time.sleep(100)  # 这里设置为30秒，你可以根据需要调整
 
     offers_confirm()
     time.sleep(1)
