@@ -1,12 +1,16 @@
 # 这是一个示例 Python 脚本。
+import random
 import time
 
 # 按 Shift+F10 执行或将其替换为您的代码。
 # 按 双击 Shift 在所有地方搜索类、文件、工具窗口、操作和设置。
 from selenium import webdriver
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import string
+
+from selenium.webdriver.support.relative_locator import locate_with
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from faker import Faker
@@ -18,6 +22,8 @@ STL_REWARD_FRAME = "#rewid-f > iframe"
 STL_OFFER_NOT_COMPLETE = "#bingRewards > div > div.flyout_control_threeOffers > div[aria-label='Offer not Completed']"
 STL_OTHER_NOT_COMPLETE = "#bingRewards > div > div.flyout_control_halfUnit > div[aria-label='Offer not Completed'] > a"
 STL_POINT_TITLE = '#bingRewards > div > div.flyout_control_halfUnit > div.promo_cont > a.block > div:nth-child(2) > div.fc_dyn > div:nth-child(1) > div.fc_dyn > p.b_subtitle.promo-title'
+STL_POINT_TITLE_NEW = '#bingRewards > div > div.search_earn_card > div > a > div > div.daily_search_row > span:nth-child(2)'
+STL_POINT_TITLE_FINISH = '#bingRewards > div > div:nth-child(5) > div > a > div.fp_row.align-top.promo_card > div.fc_dyn > div:nth-child(1) > div > p'
 is_pm = datetime.now().hour >= 12
 
 
@@ -77,6 +83,20 @@ def other_offers_confirm():
             time.sleep(1)
         ok_other = True
 
+def any_selector_visible(*locators):
+    """ 自定义等待条件：任意一个定位器可见 """
+    def _predicate(driver):
+        for locator in locators:
+            try:
+                element = driver.find_element(*locator)
+                if element.is_displayed():
+                    return element
+            except NoSuchElementException:
+                continue
+        raise TimeoutException(f"所有定位器均失败: {locators}")
+    return _predicate
+
+
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
@@ -125,7 +145,10 @@ if __name__ == '__main__':
 
         # 这里执行完已经切换到内部iframe了, 无需再切换
         wait.until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, STL_REWARD_FRAME)))
-        point_card = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, STL_POINT_TITLE)))
+        point_card = wait.until(any_selector_visible(
+            (By.CSS_SELECTOR, STL_POINT_TITLE_NEW),
+            (By.CSS_SELECTOR, STL_POINT_TITLE_FINISH)
+        ))
         print("90PointText:["+point_card.text+"]")
         if point_card.text == "你已获得 90 积分！":
             driver.switch_to.default_content()
@@ -134,7 +157,7 @@ if __name__ == '__main__':
             break
         driver.switch_to.default_content()
         # 等待一段时间后再次搜索
-        time.sleep(100)  # 这里设置为30秒，你可以根据需要调整
+        time.sleep(random.randint(30, 40))  # 这里设置为30秒，你可以根据需要调整
 
     offers_confirm()
     time.sleep(1)
