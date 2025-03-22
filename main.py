@@ -44,15 +44,15 @@ def element_is_editable(locator):
 def random_search_text(loop):
     match loop % 5:
         case 0:
-            return fake.name()
+            return fake.name() + " " + fake.address()
         case 1:
-            return fake.company()
+            return fake.company() + " " + fake.job()
         case 2:
-            return fake.address()
+            return fake.address() + " " + fake.company()
         case 3:
-            return fake.bank()
+            return fake.bank() + " " + fake.address()
         case 4:
-            return fake.job()
+            return fake.job() + " " + fake.address()
 
 
 def offers_confirm():
@@ -100,69 +100,74 @@ def any_selector_visible(*locators):
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
-    options = webdriver.ChromeOptions()
-    # 添加保持登录的数据路径：安装目录一般在C:\Users\Administrator\AppData\Local\Google\Chrome\User Data
-    options.add_argument(r"user-data-dir=C:\Users\Administrator\AppData\Local\Google\Chrome\User Data")
-    driver = webdriver.Chrome(options=options)
+    try:
+        options = webdriver.ChromeOptions()
+        # 添加保持登录的数据路径：安装目录一般在C:\Users\Administrator\AppData\Local\Google\Chrome\User Data
+        options.add_argument(r"user-data-dir=C:\Users\Administrator\AppData\Local\Google\Chrome\User Data")
+        driver = webdriver.Chrome(options=options)
 
-    search_list = set()
-    ok_90: bool = False
-    ok_offer: bool = False
-    ok_other: bool = False
-    wait = WebDriverWait(driver, 10)  # 最多等待10秒
+        search_list = set()
+        ok_90: bool = False
+        ok_offer: bool = False
+        ok_other: bool = False
+        wait = WebDriverWait(driver, 10)  # 最多等待10秒
 
-    i = 0
-    while True:
-        # 切换回主文档
-        driver.get('https://cn.bing.com/')
-        time.sleep(2)  # 可选，等待时间可以根据实际情况调整
-        driver.switch_to.default_content()
-
-        # 使用自定义条件等待输入框变为可编辑
-        search_box = wait.until(element_is_editable((By.ID, 'sb_form_q')))
-        if search_box:
-            # print("输入框可用")
-            # 清空搜索框并输入新的搜索词
-            search_term = ''
-            while True:
-                faker_data = random_search_text(i)
-                if faker_data not in search_list:
-                    search_term = faker_data
-                    break
-            driver.execute_script("arguments[0].value = arguments[1];", search_box, search_term)
-            # 提交搜索
-            driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles: true}));", search_box)
-            driver.execute_script("arguments[0].form.submit();", search_box)
-            i = i + 1
-            search_list.add(search_term)
-        else:
-            print("输入框不可用")
-
-        time.sleep(5)
-        # 等待 <div> 元素变得可点击
-        reward_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'b_clickarea')))
-        driver.execute_script("arguments[0].click();", reward_btn)
-
-        # 这里执行完已经切换到内部iframe了, 无需再切换
-        wait.until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, STL_REWARD_FRAME)))
-        point_card = wait.until(any_selector_visible(
-            (By.CSS_SELECTOR, STL_POINT_TITLE_NEW),
-            (By.CSS_SELECTOR, STL_POINT_TITLE_FINISH)
-        ))
-        print("90PointText:["+point_card.text+"]")
-        if point_card.text == "你已获得 90 积分！":
+        i = 0
+        while True:
+            # 切换回主文档
+            driver.get('https://cn.bing.com/')
+            time.sleep(2)  # 可选，等待时间可以根据实际情况调整
             driver.switch_to.default_content()
-            ok_90 = True
-            print("停止90Point获取")
-            break
-        driver.switch_to.default_content()
-        # 等待一段时间后再次搜索
-        time.sleep(random.randint(30, 40))  # 这里设置为30秒，你可以根据需要调整
 
-    offers_confirm()
-    time.sleep(1)
-    other_offers_confirm()
+            # 使用自定义条件等待输入框变为可编辑
+            search_box = wait.until(element_is_editable((By.ID, 'sb_form_q')))
+            if search_box:
+                # print("输入框可用")
+                # 清空搜索框并输入新的搜索词
+                search_term = ''
+                while True:
+                    faker_data = random_search_text(i)
+                    if faker_data not in search_list:
+                        search_term = faker_data
+                        break
+                driver.execute_script("arguments[0].value = arguments[1];", search_box, search_term)
+                # 提交搜索
+                driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles: true}));", search_box)
+                driver.execute_script("arguments[0].form.submit();", search_box)
+                i = i + 1
+                search_list.add(search_term)
+            else:
+                print("输入框不可用")
 
-    easygui.msgbox(f"90积分: {ok_90}\n3项任务: {ok_offer}{' am' if not is_pm else '' }\n其他任务: {ok_other}", title="Bing自动积分获取")
+            time.sleep(5)
+            # 等待 <div> 元素变得可点击
+            reward_btn = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'b_clickarea')))
+            driver.execute_script("arguments[0].click();", reward_btn)
+
+            # 这里执行完已经切换到内部iframe了, 无需再切换
+            wait.until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, STL_REWARD_FRAME)))
+            point_card = wait.until(any_selector_visible(
+                (By.CSS_SELECTOR, STL_POINT_TITLE_NEW),
+                (By.CSS_SELECTOR, STL_POINT_TITLE_FINISH)
+            ))
+            print("90PointText:[" + point_card.text + "]")
+            if point_card.text == "你已获得 90 积分！":
+                driver.switch_to.default_content()
+                ok_90 = True
+                print("停止90Point获取")
+                break
+            driver.switch_to.default_content()
+            # 等待一段时间后再次搜索
+            time.sleep(random.randint(30, 40))  # 这里设置为30秒，你可以根据需要调整
+
+        offers_confirm()
+        time.sleep(1)
+        other_offers_confirm()
+
+        easygui.msgbox(f"90积分: {ok_90}\n3项任务: {ok_offer}{' am' if not is_pm else ''}\n其他任务: {ok_other}",
+                       title="Bing自动积分获取")
+    except Exception as e:
+        easygui.msgbox(f"异常: {e}", "必应搜索异常")
+
 
 # 访问 https://www.jetbrains.com/help/pycharm/ 获取 PyCharm 帮助
